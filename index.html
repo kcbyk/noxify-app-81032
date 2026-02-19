@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siber Operasyon Merkezi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/6.5.1/framer-motion.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <style>
+        body {
+            background-color: #0a0a1a;
+            color: #0ff;
+            font-family: 'Courier New', monospace;
+        }
+        .neon {
+            text-shadow: 0 0 5px #0ff, 0 0 10px #0ff, 0 0 20px #0ff;
+        }
+        .card {
+            background-color: rgba(10, 10, 30, 0.7);
+            border: 1px solid #0ff;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold neon">Siber Operasyon Merkezi</h1>
+        <p class="text-lg">Canlı Sistem Performansı</p>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-4 neon">CPU Kullanımı</h2>
+            <div id="cpuChart" class="h-64"></div>
+        </div>
+        <div class="card">
+            <h2 class="text-2xl font-bold mb-4 neon">RAM Kullanımı</h2>
+            <div id="ramChart" class="h-64"></div>
+        </div>
+    </div>
+    <script>
+        // Firebase yapılandırması
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // Firebase başlat
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Grafik verilerini güncelle
+        function updateCharts() {
+            database.ref('system_metrics').on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    const cpuData = Object.values(data).map(item => item.cpu);
+                    const ramData = Object.values(data).map(item => item.ram);
+                    const labels = Object.keys(data);
+                    
+                    // CPU Grafiği
+                    new Chart(document.getElementById('cpuChart').getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'CPU Kullanımı (%)',
+                                data: cpuData,
+                                borderColor: '#0ff',
+                                backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                    
+                    // RAM Grafiği
+                    new Chart(document.getElementById('ramChart').getContext('2d'), {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: 'RAM Kullanımı (%)',
+                                data: ramData,
+                                borderColor: '#0ff',
+                                backgroundColor: 'rgba(0, 255, 255, 0.2)',
+                                tension: 0.1
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+        }
+        
+        // Sayfa yüklendiğinde grafikleri güncelle
+        window.onload = updateCharts;
+    </script>
+</body>
+</html>
